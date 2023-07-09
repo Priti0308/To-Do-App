@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>
+        To Do List
+    </title>
+
+    <meta charset="utf-8">
+    <style>
+        body {
+            background: orange;
+            background: radial-gradient(circle, #FF5F6D, #FFC371);
+        }
+        
+        .container {
+            text-align: center;
+            margin-top: 8vh;
+        }
+        
+        h1 {
+            font-size: 40px;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+        /* (A) SHARED */
+        
+        #todo-wrap,
+        #todo-wrap * {
+            font-family: Arial, Helvetica, sans-serif;
+            box-sizing: border-box;
+        }
+        
+        #todo-wrap input,
+        .todo-item {
+            border: 0;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        /* (B) WRAPPER */
+        
+        #todo-wrap {
+            background: #f2f2f2;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        /* (C) ROW ITEMS */
+        
+        #todo-add,
+        .todo-row {
+            display: flex;
+            align-items: stretch;
+        }
+        
+        #todo-item,
+        .todo-item {
+            flex-grow: 1;
+            background: #fff;
+        }
+        
+        .todo-item.todo-ok {
+            background: #cffff4;
+        }
+        
+        .todo-item.editing {
+            background: #fffdcf;
+        }
+        
+        #todo-save,
+        .todo-del,
+        .todo-edit,
+        .todo-done {
+            color: #fff;
+            cursor: pointer;
+        }
+        
+        .todo-del {
+            background: #ed3636;
+        }
+        
+        #todo-save,
+        .todo-edit,
+        .todo-done {
+            background: rgb(210, 17, 136);
+        }
+    </style>
+    <script>
+        var todo = {
+
+            data: [],
+            hAdd: null,
+            hTemplate: null,
+            hList: null,
+            init: () => {
+                if (localStorage.todo == undefined) {
+                    localStorage.todo = "[]";
+                }
+
+                todo.data = JSON.parse(localStorage.todo);
+
+                todo.hAdd = document.getElementById("todo-item");
+                todo.hTemplate = document.getElementById("todo-template").content;
+                todo.hList = document.getElementById("todo-list");
+
+                document.getElementById("todo-add").onsubmit = todo.add;
+
+                todo.draw();
+            },
+
+            draw: () => {
+                todo.hList.innerHTML = "";
+
+                if (todo.data.length > 0) {
+                    for (let id in todo.data) {
+                        let row = todo.hTemplate.cloneNode(true),
+                            edit = row.querySelector(".todo-edit"),
+                            item = row.querySelector(".todo-item");
+                        item.value = todo.data[id][0];
+                        item.id = "item" + id;
+                        edit.id = "edit" + id;
+                        edit.onclick = () => todo.edit(id);
+                        row.querySelector(".todo-done").onclick = () => todo.toggle(id);
+                        row.querySelector(".todo-del").onclick = () => todo.del(id);
+                        if (todo.data[id][1]) {
+                            row.querySelector(".todo-item").classList.add("todo-ok");
+                        }
+                        todo.hList.appendChild(row);
+                    }
+                }
+            },
+            save: () => {
+                localStorage.todo = JSON.stringify(todo.data);
+                todo.draw();
+            },
+            add: () => {
+                todo.data.push([todo.hAdd.value, false]);
+                todo.hAdd.value = "";
+                todo.save();
+                return false;
+            },
+            edit: id => {
+                let edit = document.getElementById("edit" + id),
+                    item = document.getElementById("item" + id);
+
+                if (item.disabled) {
+                    item.classList.add("editing");
+                    item.disabled = false;
+                    item.select();
+                    edit.value = "\u270F";
+                } else {
+                    item.classList.remove("editing");
+                    item.disabled = true;
+                    edit.value = "\u270E";
+                    todo.data[id][0] = item.value;
+                    todo.save();
+                }
+            },
+            toggle: id => {
+                todo.data[id][1] = !todo.data[id][1];
+                todo.save();
+            },
+            del: id => {
+                if (confirm("Delete task?")) {
+                    todo.data.splice(id, 1);
+                    todo.save();
+                }
+            }
+        };
+        window.addEventListener("load", todo.init);
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Learn with Priti To Do List </h1>
+        <div id="todo-wrap" style="text-align: center; margin-top: 10vh;">
+            <h1 style="font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;">To Do List </h1>
+            <h3 style="font-family: cursive;">Task</h3>
+            <form id="todo-add">
+
+                <input type="text" id="todo-item" placeholder="New Item" required>
+                <input type="submit" id="todo-save" value="&#10010;">
+            </form>
+            <div id="todo-list"></div>
+
+            <template id="todo-template">
+      <div class="todo-row">
+        <input type="button" class="todo-del" value="&#10006;">
+        <input type="button" class="todo-edit" value="&#9998;">
+        <input type="text" class="todo-item" disabled>
+        <input type="button" class="todo-done" value="&#10004;">
+      </div>
+            </template>
+        </div>
+    </div>
+</body>
+
+</html>
